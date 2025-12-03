@@ -16,7 +16,7 @@ class IsAdmin
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!Auth::check() || Auth::user()->is_admin !== true) {
+        if (!Auth::check() || Auth::user()->is_admin == false) {
             abort(403, 'Unauthorized');
         }
 

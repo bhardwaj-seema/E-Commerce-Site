@@ -1,4 +1,5 @@
-namespace App\Http\Livewire\Admin\Product;
+<?php
+namespace App\Livewire\Admin\Product;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
@@ -8,65 +9,67 @@ use App\Models\ProductImage;
 
 class Form extends Component
 {
-    use WithFileUploads;
+     use WithFileUploads;
 
-    public ?Product $product;
-    public $name, $slug, $description, $price, $stock, $category_id, $is_active = true;
-    public $images = []; // temporary uploads
+    public $product;
+    public $productId;
 
-    protected function rules()
+    public $name;
+    public $slug;
+    public $description;
+    public $price;
+    public $stock;
+    public $category_id;
+    public $is_active = true;
+
+    public $categories;
+    public $images = [];
+
+    public function mount($productId = null)
     {
-        return [
-            'name' => 'required|string|max:255',
-            'slug' => 'required|string|max:255|unique:products,slug,'.($this->product->id ?? 'NULL'),
-            'price' => 'required|numeric|min:0',
-            'stock' => 'required|integer|min:0',
-            'category_id' => 'nullable|exists:categories,id',
-            'images.*' => 'image|max:2048',
-        ];
-    }
+        $this->categories = Category::all();
+        $this->productId = $productId;
+        if ($productId) {
+            $this->product = Product::findOrFail($productId);
 
-    public function mount($id = null)
-    {
-        $this->product = $id ? Product::findOrFail($id) : new Product();
-        if ($this->product && $this->product->exists) {
-            $this->fill($this->product->toArray());
+            $this->name = $this->product->name;
+            $this->slug = $this->product->slug;
+            $this->description = $this->product->description;
+            $this->price = $this->product->price;
+            $this->stock = $this->product->stock;
+            $this->category_id = $this->product->category_id;
+            $this->is_active = $this->product->is_active;
+        } else {
+            $this->product = new Product();
         }
     }
 
     public function save()
     {
-        $this->validate();
+        $validated = $this->validate([
+            'name' => 'required',
+            'slug' => 'required|unique:products,slug,' . ($this->productId ?? 'NULL'),
+            'description' => 'required',
+            'price' => 'required|numeric|min:1',
+            'stock' => 'required|integer|min:0',
+            'category_id' => 'required',
+            'is_active' => 'boolean',
+        ]);
 
-        $data = [
-            'name' => $this->name,
-            'slug' => $this->slug,
-            'description' => $this->description,
-            'price' => $this->price,
-            'stock' => $this->stock,
-            'category_id' => $this->category_id,
-            'is_active' => $this->is_active,
-        ];
+        $this->product->fill($validated);
+        $this->product->save();
 
-        $this->product = Product::updateOrCreate(['id' => $this->product->id ?? null], $data);
+        session()->flash('success', 'Product saved successfully.');
 
-        // handle uploaded images
-        foreach ($this->images as $uploaded) {
-            $path = $uploaded->store('products', 'public');
-            ProductImage::create([
-                'product_id' => $this->product->id,
-                'path' => $path,
-            ]);
-        }
-
-        session()->flash('success', 'Product saved.');
         return redirect()->route('admin.products.index');
     }
 
     public function render()
     {
         return view('livewire.admin.product.form', [
-            'categories' => Category::orderBy('name')->get()
-        ]);
+        'categories' => Category::all(),
+        'productId'=>$this->productId
+    ]);
     }
+
 }

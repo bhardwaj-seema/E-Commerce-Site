@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\Product;
 
 class ProductController extends Controller
 {
@@ -10,4 +11,27 @@ class ProductController extends Controller
     {
         return view('admin.products.index');
     }
+
+  public function create()
+{
+    return view('admin.products.create');
 }
+
+
+   public function edit($id)
+{
+    $product = Product::findOrFail($id);
+
+    return view('admin.products.edit', [
+        'productId' => $product
+    ]);
+}
+
+public function destroy($id){
+    $product = Product::findOrFail($id);
+    $product->delete();
+    
+}
+
+}
+ 
