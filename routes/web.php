@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ProductController;
+use App\Http\Controllers\HomeController;
 use Illuminate\Support\Facades\Route;
 
 // Public page
-Route::view('/', 'welcome');
+Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/product/{slug}', [ProductController::class, 'show'])->name('products.show');
 
 // User dashboard (normal users)
 Route::view('/dashboard', 'dashboard')

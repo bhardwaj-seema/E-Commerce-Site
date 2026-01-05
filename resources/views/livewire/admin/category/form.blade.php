@@ -1,4 +1,4 @@
-<div class="max-w-3xl mx-auto bg-white shadow rounded p-6">
+<div class="mx-auto bg-white shadow rounded p-6">
 
     {{-- Header --}}
     <div class="flex justify-between items-center mb-6">
